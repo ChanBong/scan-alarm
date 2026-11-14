@@ -1,0 +1,7 @@
+*.xcodeproj
+build/
+Payload/
+*.ipa
+ScanAlarm/Info.plist
+.DS_Store
+dist/

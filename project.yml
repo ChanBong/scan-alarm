@@ -1,0 +1,31 @@
+name: ScanAlarm
+options:
+  bundleIdPrefix: dev.personal
+  deploymentTarget:
+    iOS: "26.0"
+targets:
+  ScanAlarm:
+    type: application
+    platform: iOS
+    sources:
+      - ScanAlarm
+    scheme: {}
+    info:
+      path: ScanAlarm/Info.plist
+      properties:
+        CFBundleDisplayName: Scan Alarm
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        NSCameraUsageDescription: The camera scans the barcode that turns the alarm off.
+        NSAlarmKitUsageDescription: Scan Alarm schedules alarms that keep ringing until you scan your barcode.
+        NSSupportsLiveActivities: true
+        UIBackgroundModes:
+          - audio
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.personal.scanalarm
