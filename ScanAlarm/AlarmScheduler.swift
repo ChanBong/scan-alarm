@@ -1,3 +1,4 @@
+import ActivityKit
 import AlarmKit
 import AppIntents
 import SwiftUI
@@ -29,7 +30,7 @@ enum AlarmScheduler {
     }
 
     static func apply(hour: Int, minute: Int, enabled: Bool, ringing: Bool,
-                      nextOccurrence: Date?) async -> Result {
+                      nextOccurrence: Date?, customSound: String?) async -> Result {
         let manager = AlarmManager.shared
         let center = UNUserNotificationCenter.current()
 
@@ -64,11 +65,11 @@ enum AlarmScheduler {
                 time: .init(hour: hour, minute: minute),
                 repeats: .weekly([.sunday, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday])
             ))
-            if await schedule(daily) { count += 1 }
+            if await schedule(daily, sound: customSound) { count += 1 }
 
             for i in 0..<(chainLength - 1) {
                 let date = chainStart.addingTimeInterval(Double(i) * 60)
-                guard await schedule(.fixed(date)) else { break }
+                guard await schedule(.fixed(date), sound: customSound) else { break }
                 count += 1
             }
         }
@@ -78,7 +79,7 @@ enum AlarmScheduler {
             let content = UNMutableNotificationContent()
             content.title = "Alarm"
             content.body = "Open Scan Alarm and scan your barcode to stop it."
-            content.sound = UNNotificationSound(named: UNNotificationSoundName("alarm.wav"))
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(customSound ?? "alarm.wav"))
             let trigger = UNTimeIntervalNotificationTrigger(
                 timeInterval: max(1, date.timeIntervalSince(now)), repeats: false)
             try? await center.add(UNNotificationRequest(identifier: "ring-\(i)", content: content, trigger: trigger))
@@ -87,7 +88,7 @@ enum AlarmScheduler {
         return Result(count: count, authorized: authorized)
     }
 
-    private static func schedule(_ schedule: Alarm.Schedule) async -> Bool {
+    private static func schedule(_ schedule: Alarm.Schedule, sound: String?) async -> Bool {
         let stop = AlarmButton(text: "Stop", textColor: .white, systemImageName: "stop.circle")
         let open = AlarmButton(text: "Scan", textColor: .white, systemImageName: "barcode.viewfinder")
         let alert = AlarmPresentation.Alert(
@@ -104,7 +105,8 @@ enum AlarmScheduler {
         let configuration = AlarmManager.AlarmConfiguration<RingMetadata>(
             schedule: schedule,
             attributes: attributes,
-            secondaryIntent: OpenScannerIntent()
+            secondaryIntent: OpenScannerIntent(),
+            sound: sound.map { AlertConfiguration.AlertSound.named($0) } ?? .default
         )
         do {
             _ = try await AlarmManager.shared.schedule(id: UUID(), configuration: configuration)

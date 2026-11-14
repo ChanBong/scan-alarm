@@ -7,12 +7,12 @@ final class Ringer {
 
     private var player: AVAudioPlayer?
 
-    func start() {
+    func start(url: URL?) {
         if let player {
             if !player.isPlaying { player.play() }
             return
         }
-        guard let url = Bundle.main.url(forResource: "alarm", withExtension: "wav") else { return }
+        guard let url else { return }
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, mode: .default, options: [])
         try? session.setActive(true)

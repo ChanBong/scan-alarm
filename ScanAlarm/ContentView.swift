@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject private var store: AlarmStore
@@ -76,6 +77,8 @@ struct HomeView: View {
     @EnvironmentObject private var store: AlarmStore
     let now: Date
     @State private var registering = false
+    @State private var pickingSound = false
+    @State private var soundError: String?
 
     private var timeBinding: Binding<Date> {
         Binding(
@@ -118,6 +121,18 @@ struct HomeView: View {
                     }
                 }
 
+                Section("Sound") {
+                    LabeledContent("Tune", value: store.soundName ?? "Default beeps")
+                    Button("Choose audio file") { pickingSound = true }
+                    Button(store.previewing ? "Stop preview" : "Preview") { store.togglePreview() }
+                    if store.soundName != nil {
+                        Button("Use default beeps") { store.useDefaultSound() }
+                    }
+                    if let soundError {
+                        Text(soundError).foregroundStyle(.red)
+                    }
+                }
+
                 if let expiry = Signing.expiry {
                     Section("App signature") {
                         let days = expiry.timeIntervalSince(now) / 86400
@@ -130,6 +145,14 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Scan Alarm")
+            .fileImporter(isPresented: $pickingSound, allowedContentTypes: [.audio]) { result in
+                do {
+                    try store.importSound(from: try result.get())
+                    soundError = nil
+                } catch {
+                    soundError = "Could not use that file: \(error.localizedDescription)"
+                }
+            }
             .sheet(isPresented: $registering) {
                 RegisterView { code in
                     store.setBarcode(code)
